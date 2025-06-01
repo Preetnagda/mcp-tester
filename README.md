@@ -6,7 +6,7 @@ A Next.js application for registering and testing Model Context Protocol (MCP) s
 - List all registered MCP servers
 - Connect to MCP servers and discover their tools
 - Test MCP tools with custom arguments
-- Support multiple transport protocols (stdio, HTTPS/SSE)
+- Support multiple transport protocols (stdio, HTTPS/Streamable HTTP)
 
 ## Prerequisites
 
@@ -74,10 +74,11 @@ A Next.js application for registering and testing Model Context Protocol (MCP) s
 - Discover available tools and resources
 - Test tools with custom JSON arguments
 - View call history with results/errors
+- Override headers for testing different authentication tokens
 
 ## Supported Transport Protocols
 
-The application now supports multiple MCP transport protocols through a modular connection architecture:
+The application supports multiple MCP transport protocols through a modular connection architecture:
 
 ### 1. Local Servers (stdio://)
 For local MCP servers that run as processes:
@@ -93,8 +94,8 @@ stdio://uvx mcp-server-git --repository /path/to/repo
 - `stdio://python filesystem-server.py` - Python filesystem server
 - `stdio://uvx mcp-server-postgres postgresql://user:pass@localhost/db` - PostgreSQL server
 
-### 2. HTTP/HTTPS Servers with Server-Sent Events (NEW!)
-For remote MCP servers accessible via HTTP/HTTPS using Server-Sent Events:
+### 2. HTTP/HTTPS Servers with Streamable HTTP
+For remote MCP servers accessible via HTTP/HTTPS using Streamable HTTP transport:
 
 ```
 https://api.example.com/mcp
@@ -103,38 +104,43 @@ http://localhost:3001/mcp
 ```
 
 **Key Features:**
-- **Streamable connections** using Server-Sent Events (SSE)
+- **Streamable connections** using HTTP with bidirectional communication
 - **Custom headers** support for authentication
 - **Real-time communication** with remote MCP servers
-- **Automatic reconnection** handling
+- **Session management** and connection persistence
 
 **Example HTTPS URLs:**
-- `https://mcp-server.example.com/sse` - Remote MCP server with SSE endpoint
+- `https://mcp-server.example.com/mcp` - Remote MCP server with Streamable HTTP
 - `https://api.weather.com/mcp` - Weather API with MCP interface
 - `http://localhost:8080/mcp` - Local development server
 
-### 3. Mock Servers (fallback)
-For testing purposes, any unsupported URL scheme will use mock data:
-
-```
-ws://localhost:8080/mcp (future WebSocket support)
-custom://special-protocol
-```
-
 ## MCP Connection Architecture
 
-The application uses a modular `McpConnectionManager` class located in `src/lib/mcp-client.ts` that:
+The application uses a modular transport architecture with separate classes for each protocol:
 
-- **Abstracts transport layer** - Handles different connection types transparently
-- **Provides type safety** - TypeScript interfaces for all MCP operations
-- **Manages connections** - Automatic connection lifecycle management
-- **Error handling** - Detailed error messages for troubleshooting
-- **Extensible design** - Easy to add new transport protocols
+### File Structure
+```
+src/lib/
+├── mcp-client.ts              # Main connection manager
+└── transports/
+    ├── index.ts               # Barrel exports
+    ├── base-transport.ts      # Base interfaces & abstract class
+    ├── stdio-transport.ts     # Stdio protocol implementation
+    └── http-transport.ts      # HTTP/HTTPS protocol implementation
+```
+
+### Architecture Features
+- **Modular Design** - Each transport protocol is in its own file
+- **Type Safety** - TypeScript interfaces for all MCP operations
+- **Extensible** - Easy to add new transport protocols
+- **Automatic Protocol Detection** - Selects appropriate transport based on URL
+- **Error Handling** - Detailed error messages for troubleshooting
+- **Connection Management** - Automatic connection lifecycle management
 
 ### Connection Flow
 
 1. **URL Detection** - Automatically detects protocol from URL scheme
-2. **Transport Creation** - Creates appropriate transport (stdio, SSE, etc.)
+2. **Transport Selection** - Selects appropriate transport class (stdio, HTTP, etc.)
 3. **Client Connection** - Establishes MCP protocol connection
 4. **Capability Discovery** - Lists available tools and resources
 5. **Tool Execution** - Handles tool calls with proper argument passing
@@ -163,15 +169,23 @@ The application uses a modular `McpConnectionManager` class located in `src/lib/
 
 ### For https:// connections
 
-1. **Deploy MCP server with SSE endpoint:**
+1. **Deploy MCP server with Streamable HTTP endpoint:**
    ```typescript
-   // Example Express.js server with SSE
+   // Example Express.js server with Streamable HTTP
    import express from 'express';
    import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-   import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+   import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
    
    const app = express();
-   app.use('/mcp', SSEServerTransport.create(server));
+   
+   app.all('/mcp', async (req, res) => {
+     const transport = new StreamableHTTPServerTransport({
+       sessionIdGenerator: () => randomUUID(),
+     });
+     const server = new Server({ name: 'my-server', version: '1.0.0' });
+     await server.connect(transport);
+     await transport.handleRequest(req, res, req.body);
+   });
    ```
 
 2. **Register with HTTPS URL:**
@@ -217,10 +231,11 @@ CREATE TABLE mcp_servers (
 - Best for local development and testing
 
 ### https:// Transport
-- Uses `SSEClientTransport` from MCP SDK
-- Establishes Server-Sent Events connection
+- Uses `StreamableHTTPClientTransport` from MCP SDK
+- Establishes bidirectional HTTP communication
 - Supports custom headers for authentication
 - Enables real-time streaming communication
+- Session-based connection management
 - Suitable for production deployments
 
 ### Future Transport Support
@@ -234,7 +249,7 @@ CREATE TABLE mcp_servers (
 - **Backend:** Next.js API Routes
 - **Database:** PostgreSQL with Drizzle ORM
 - **MCP Integration:** @modelcontextprotocol/sdk
-- **Transport Protocols:** stdio, Server-Sent Events (SSE)
+- **Transport Protocols:** stdio, Streamable HTTP
 - **Development:** Docker for PostgreSQL
 
 ## Database Scripts
@@ -255,9 +270,9 @@ npm run db:studio
 - The application uses App Router (Next.js 13+)
 - TypeScript is configured with strict mode
 - Tailwind CSS provides styling
-- Modular MCP connection architecture in `src/lib/mcp-client.ts`
+- Modular MCP connection architecture with separate transport files
 - Real MCP protocol implementation for stdio:// and https:// URLs
-- Mock implementations for unsupported URL schemes
+- Each transport protocol is implemented in its own class
 
 ## Troubleshooting
 
@@ -270,7 +285,7 @@ npm run db:studio
 
 2. **https:// servers:**
    - Verify the server URL is accessible
-   - Check that the server supports SSE transport
+   - Check that the server supports Streamable HTTP transport
    - Ensure CORS is properly configured on the server
    - Verify authentication headers if required
 
@@ -291,9 +306,41 @@ stdio://uvx mcp-server-git --repository /path/to/git/repo
 **Remote (https://):**
 ```bash
 https://api.example.com/mcp
-https://mcp-server.herokuapp.com/sse
+https://mcp-server.herokuapp.com/mcp
 http://localhost:8080/mcp
 ```
+
+## Adding New Transport Protocols
+
+The modular architecture makes it easy to add new transport protocols:
+
+1. **Create a new transport file:**
+   ```typescript
+   // src/lib/transports/websocket-transport.ts
+   import { BaseMcpTransport } from './base-transport.js';
+   
+   export class WebSocketMcpTransport extends BaseMcpTransport {
+     supportsProtocol(url: string): boolean {
+       return url.startsWith('ws://') || url.startsWith('wss://');
+     }
+     
+     async connect(url: string, headers?: Record<string, string>) {
+       // WebSocket implementation
+     }
+     
+     async callTool(url: string, toolName: string, toolArgs: any, headers?: Record<string, string>) {
+       // WebSocket tool call implementation
+     }
+   }
+   ```
+
+2. **Register the transport:**
+   ```typescript
+   import { McpConnectionManager } from '@/lib/mcp-client';
+   import { WebSocketMcpTransport } from '@/lib/transports/websocket-transport';
+   
+   McpConnectionManager.registerTransport(new WebSocketMcpTransport());
+   ```
 
 ## Future Enhancements
 
