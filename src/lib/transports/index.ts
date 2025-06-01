@@ -5,11 +5,11 @@ export type {
   McpConnectionResult,
   McpToolCallResult,
   IMcpTransport
-} from './base-transport.js';
+} from './base-transport';
 
 // Export base transport class
-export { BaseMcpTransport } from './base-transport.js';
+export { BaseMcpTransport } from './base-transport';
 
 // Export transport implementations
-export { StdioMcpTransport } from './stdio-transport.js';
-export { HttpMcpTransport } from './http-transport.js'; 
+export { StdioMcpTransport } from './stdio-transport';
+export { HttpMcpTransport } from './http-transport'; 

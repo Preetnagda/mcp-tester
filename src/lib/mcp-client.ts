@@ -5,7 +5,7 @@ export type {
   McpConnectionResult,
   McpToolCallResult,
   IMcpTransport
-} from './transports/index.js';
+} from '@/lib/transports';
 
 // Import transport implementations
 import {
@@ -14,7 +14,7 @@ import {
   McpToolCallResult,
   StdioMcpTransport,
   HttpMcpTransport
-} from './transports/index.js';
+} from '@/lib/transports';
 
 // Connection manager that delegates to appropriate transport implementations
 export class McpConnectionManager {

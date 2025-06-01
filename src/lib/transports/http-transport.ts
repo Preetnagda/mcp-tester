@@ -1,5 +1,5 @@
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { BaseMcpTransport, McpConnectionResult, McpToolCallResult } from './base-transport.js';
+import { BaseMcpTransport, McpConnectionResult, McpToolCallResult } from './base-transport';
 
 // HTTP transport implementation
 export class HttpMcpTransport extends BaseMcpTransport {
