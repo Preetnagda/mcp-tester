@@ -8,11 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Form from '@rjsf/core';
-import validator from '@rjsf/validator-ajv8';
 import { Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 
 interface McpServer {

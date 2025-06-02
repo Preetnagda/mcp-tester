@@ -103,4 +103,41 @@ export async function PUT(
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = await params;
+    const idNumber = parseInt(id);
+    
+    if (isNaN(idNumber)) {
+      return NextResponse.json(
+        { message: 'Invalid server ID' },
+        { status: 400 }
+      );
+    }
+
+    const server = await db.query.mcpServers.findFirst({
+      where: eq(mcpServers.id, idNumber),
+    });
+
+    if (!server) {
+      return NextResponse.json({ message: 'Server not found' }, { status: 404 });
+    }
+
+    await db
+      .delete(mcpServers)
+      .where(eq(mcpServers.id, idNumber));
+
+    return NextResponse.json({ message: 'Server deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting MCP server:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 } 

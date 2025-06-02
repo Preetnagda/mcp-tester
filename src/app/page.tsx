@@ -5,6 +5,7 @@ import { desc } from 'drizzle-orm';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DeleteServerButton } from "@/app/components/delete-server-button";
 
 export const metadata = {
   title: 'MCP Server Tester',
@@ -51,7 +52,10 @@ export default async function HomePage() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl">{server.name}</CardTitle>
-                    <Badge variant="secondary">#{server.id}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">#{server.id}</Badge>
+                      <DeleteServerButton serverId={server.id} serverName={server.name} />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
