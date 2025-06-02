@@ -9,6 +9,7 @@ interface McpServer {
   name: string;
   description: string | null;
   url: string;
+  transportType: 'stdio' | 'http' | 'sse';
   headers: Record<string, string> | null;
   createdAt: string;
   updatedAt: string;
@@ -102,6 +103,7 @@ export default function McpPage() {
         },
         body: JSON.stringify({
           url: server.url,
+          transportType: server.transportType,
           headers: getEffectiveHeaders(),
         }),
       });
@@ -135,6 +137,7 @@ export default function McpPage() {
         },
         body: JSON.stringify({
           url: server.url,
+          transportType: server.transportType,
           headers: getEffectiveHeaders(),
           toolName: selectedTool.name,
           arguments: args,
@@ -206,6 +209,14 @@ export default function McpPage() {
             <div className="space-y-2">
               <div>
                 <span className="font-medium text-black">URL:</span> <span className="text-black">{server.url}</span>
+              </div>
+              <div>
+                <span className="font-medium text-black">Transport:</span> <span className="text-black">{
+                  server.transportType === 'stdio' ? 'Local Process (stdio://)' :
+                  server.transportType === 'http' ? 'Streamable HTTP' :
+                  server.transportType === 'sse' ? 'Server-Sent Events' :
+                  server.transportType
+                }</span>
               </div>
               {server.headers && Object.keys(server.headers).length > 0 && (
                 <div>

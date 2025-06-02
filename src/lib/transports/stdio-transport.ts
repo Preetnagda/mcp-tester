@@ -1,5 +1,5 @@
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { BaseMcpTransport, McpConnectionResult, McpToolCallResult } from './base-transport';
+import { BaseMcpTransport, McpConnectionResult, McpToolCallResult } from '@/lib/transports/base-transport';
 
 // Stdio transport implementation
 export class StdioMcpTransport extends BaseMcpTransport {

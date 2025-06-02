@@ -15,6 +15,7 @@ export default function RegisterPage() {
     name: '',
     description: '',
     url: '',
+    transportType: 'http' as 'stdio' | 'http' | 'sse',
   });
   const [headers, setHeaders] = useState<Header[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,7 +76,7 @@ export default function RegisterPage() {
         <Link href="/" className="text-blue-600 hover:text-blue-800 mr-4">
           ← Back to Registry
         </Link>
-        <h1 className="text-3xl font-bold">Register MCP Server</h1>
+        <h1 className="text-3xl font-bold text-black">Register MCP Server</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,60 +110,92 @@ export default function RegisterPage() {
         </div>
 
         <div>
+          <label htmlFor="transportType" className="block text-sm font-medium text-gray-700 mb-2">
+            Transport Type *
+          </label>
+          <select
+            id="transportType"
+            required
+            value={formData.transportType}
+            onChange={(e) => setFormData(prev => ({ ...prev, transportType: e.target.value as 'stdio' | 'http' | 'sse' }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="http">HTTP/HTTPS (Streamable HTTP)</option>
+            <option value="sse">HTTP/HTTPS (Server-Sent Events)</option>
+            <option value="stdio">Local Process (stdio://)</option>
+          </select>
+          <p className="mt-1 text-sm text-gray-500">
+            {formData.transportType === 'stdio' && 'For local MCP servers that run as processes (e.g., stdio://node server.js)'}
+            {formData.transportType === 'http' && 'For remote MCP servers using modern Streamable HTTP transport'}
+            {formData.transportType === 'sse' && 'For remote MCP servers using legacy Server-Sent Events transport'}
+          </p>
+        </div>
+
+        <div>
           <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
             Server URL *
           </label>
           <input
-            type="url"
+            type="text"
             id="url"
             required
             value={formData.url}
             onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="https://example.com/mcp"
+            placeholder={
+              formData.transportType === 'stdio' 
+                ? 'stdio://node /path/to/server.js' 
+                : 'https://example.com/mcp'
+            }
           />
+          <p className="mt-1 text-sm text-gray-500">
+            {formData.transportType === 'stdio' && 'Use stdio:// protocol with command and arguments'}
+            {(formData.transportType === 'http' || formData.transportType === 'sse') && 'Use https:// or http:// URL to your MCP server endpoint'}
+          </p>
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Custom Headers
-            </label>
-            <button
-              type="button"
-              onClick={addHeader}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm transition-colors"
-            >
-              Add Header
-            </button>
-          </div>
-          
-          {headers.map((header, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Header name"
-                value={header.key}
-                onChange={(e) => updateHeader(index, 'key', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="text"
-                placeholder="Header value"
-                value={header.value}
-                onChange={(e) => updateHeader(index, 'value', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+        {(formData.transportType === 'http' || formData.transportType === 'sse') && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Custom Headers
+              </label>
               <button
                 type="button"
-                onClick={() => removeHeader(index)}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition-colors"
+                onClick={addHeader}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm transition-colors"
               >
-                Remove
+                Add Header
               </button>
             </div>
-          ))}
-        </div>
+            
+            {headers.map((header, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Header name"
+                  value={header.key}
+                  onChange={(e) => updateHeader(index, 'key', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Header value"
+                  value={header.value}
+                  onChange={(e) => updateHeader(index, 'value', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeHeader(index)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-4">
           <button

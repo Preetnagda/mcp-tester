@@ -46,9 +46,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const idNumber = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(idNumber)) {
       return NextResponse.json(
         { message: 'Invalid server ID' },
         { status: 400 }
@@ -56,11 +57,20 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, url, headers } = body;
+    const { name, description, url, transportType, headers } = body;
 
     if (!name || !url) {
       return NextResponse.json(
         { message: 'Name and URL are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate transport type
+    const validTransportTypes = ['stdio', 'http', 'sse'];
+    if (transportType && !validTransportTypes.includes(transportType)) {
+      return NextResponse.json(
+        { message: 'Invalid transport type. Must be one of: stdio, http, sse' },
         { status: 400 }
       );
     }
@@ -71,10 +81,11 @@ export async function PUT(
         name,
         description: description || null,
         url,
+        transportType: transportType || 'http',
         headers: headers || {},
         updatedAt: new Date(),
       })
-      .where(eq(mcpServers.id, id))
+      .where(eq(mcpServers.id, idNumber))
       .returning();
 
     if (updatedServer.length === 0) {

@@ -6,11 +6,20 @@ import { eq } from 'drizzle-orm';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, url, headers } = body;
+    const { name, description, url, transportType, headers } = body;
 
     if (!name || !url) {
       return NextResponse.json(
         { message: 'Name and URL are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate transport type
+    const validTransportTypes = ['stdio', 'http', 'sse'];
+    if (transportType && !validTransportTypes.includes(transportType)) {
+      return NextResponse.json(
+        { message: 'Invalid transport type. Must be one of: stdio, http, sse' },
         { status: 400 }
       );
     }
@@ -21,6 +30,7 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         url,
+        transportType: transportType || 'http',
         headers: headers || {},
       })
       .returning();

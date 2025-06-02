@@ -5,11 +5,12 @@ export type {
   McpConnectionResult,
   McpToolCallResult,
   IMcpTransport
-} from './base-transport';
+} from '@/lib/transports/base-transport';
 
 // Export base transport class
-export { BaseMcpTransport } from './base-transport';
+export { BaseMcpTransport } from '@/lib/transports/base-transport';
 
 // Export transport implementations
-export { StdioMcpTransport } from './stdio-transport';
-export { HttpMcpTransport } from './http-transport'; 
+export { StdioMcpTransport } from '@/lib/transports/stdio-transport';
+export { HttpMcpTransport } from '@/lib/transports/http-transport';
+export { SseMcpTransport } from '@/lib/transports/sse-transport'; 

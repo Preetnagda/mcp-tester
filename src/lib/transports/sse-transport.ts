@@ -1,15 +1,15 @@
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { BaseMcpTransport, McpConnectionResult, McpToolCallResult } from '@/lib/transports/base-transport';
 
-// HTTP transport implementation
-export class HttpMcpTransport extends BaseMcpTransport {
+// SSE transport implementation (legacy)
+export class SseMcpTransport extends BaseMcpTransport {
   supportsProtocol(url: string): boolean {
     return url.startsWith('https://') || url.startsWith('http://');
   }
 
   async connect(url: string, headers: Record<string, string> = {}): Promise<McpConnectionResult> {
     try {
-      const transport = new StreamableHTTPClientTransport(new URL(url), {
+      const transport = new SSEClientTransport(new URL(url), {
         requestInit: {
           headers
         }
@@ -42,7 +42,7 @@ export class HttpMcpTransport extends BaseMcpTransport {
 
   async callTool(url: string, toolName: string, toolArgs: any, headers: Record<string, string> = {}): Promise<McpToolCallResult> {
     try {
-      const transport = new StreamableHTTPClientTransport(new URL(url), {
+      const transport = new SSEClientTransport(new URL(url), {
         requestInit: {
           headers
         }

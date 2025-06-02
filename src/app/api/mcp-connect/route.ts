@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { McpConnectionManager } from '@/lib/mcp-client';
+import { McpConnectionManager, TransportType } from '@/lib/mcp-client';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, headers } = body;
+    const { url, transportType, headers } = body;
 
     if (!url) {
       return NextResponse.json(
@@ -13,7 +13,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await McpConnectionManager.connect(url, headers || {});
+    // Use the new transport-specific method if transportType is provided,
+    // otherwise fall back to legacy URL-based detection
+    const result = transportType 
+      ? await McpConnectionManager.connect(url, transportType as TransportType, headers || {})
+      : await McpConnectionManager.connectLegacy(url, headers || {});
+      
     return NextResponse.json(result);
 
   } catch (error) {
